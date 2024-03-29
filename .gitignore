@@ -1,0 +1,5 @@
+build
+.vscode
+*.wav
+wifi_cred.h
+SoundM5.AP.ignore
