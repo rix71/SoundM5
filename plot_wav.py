@@ -1,10 +1,13 @@
 # Read the file and plot the sound
 from matplotlib import pyplot as plt
 import numpy as np
+from glob import glob
 
-WAVE_OUTPUT_FILENAME = "output.wav"
+filename = "./recordings/nirvana_lithium.wav"
+# filename = sorted(glob("./recordings/output_*.wav"))[-1]
+# print(f"Reading file: {filename}")
 
-sound = np.frombuffer(open(WAVE_OUTPUT_FILENAME, "rb").read(), dtype=np.uint8)
+sound = np.frombuffer(open(filename, "rb").read(), dtype=np.uint8)
 sound = sound - 128
 sound = sound / 128
 sound = sound.astype(np.float32)

@@ -21,7 +21,7 @@ bool recording = false;
 // #define WIFI_SSID "XXX"
 // #define WIFI_PASS "YYY"
 // #define LOCAL_IP "Z.Z.Z.Z"
-#define UDP_PORT 5005
+#define UDP_PORT 9999
 
 // UDP
 WiFiUDP udp;
@@ -105,9 +105,13 @@ void setup()
 
     M5.Lcd.setTextColor(BLACK, WHITE);
 
-    // ------------------------
-    // Connect to WiFi
+// ------------------------
+// Connect to WiFi
+#ifdef WIFI_PASS
     WiFi.begin(WIFI_SSID, WIFI_PASS);
+#else
+    WiFi.begin(WIFI_SSID);
+#endif
     Serial.print("Connecting to ");
     Serial.print(WIFI_SSID);
     M5.Lcd.print("Connecting to ");
@@ -173,6 +177,8 @@ void loop()
             Serial.println("Sending packet");
             udp.beginPacket(LOCAL_IP, UDP_PORT);
             udp.write((uint8_t *)packetBuffer, packetSize);
+            // udp.print((unsigned long)packetBuffer);
+            // udp.printf("%d", packetBuffer);
             memset(packetBuffer, 0, packetSize);
             udp.endPacket();
         }

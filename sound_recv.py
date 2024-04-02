@@ -1,15 +1,13 @@
 import socket
 import wave
-import numpy as np
-import matplotlib.pyplot as plt
-
+import datetime
 
 LOCAL_IP = "x.x.x.x"
-UDP_PORT = 5005
+UDP_PORT = 9999
 
-WAVE_OUTPUT_FILENAME = "output.wav"
+# WAVE_OUTPUT_FILENAME = "output.wav"
 FRAME_RATE = 44100
-MAX_FRAMES = 1000
+MAX_FRAMES = 800
 
 
 def main():
@@ -29,12 +27,16 @@ def main():
             break
 
     print("Reached max frames. Writing file...")
-    wf = wave.open(WAVE_OUTPUT_FILENAME, "wb")
+    output_filename = (
+        f"./recordings/output_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.wav"
+    )
+    wf = wave.open(output_filename, "wb")
     wf.setnchannels(1)
     wf.setsampwidth(1)
     wf.setframerate(FRAME_RATE)
     wf.writeframes(b"".join(frames))
     wf.close()
+    print(f"Saved to {output_filename}")
 
 
 if __name__ == "__main__":
