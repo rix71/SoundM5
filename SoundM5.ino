@@ -8,7 +8,7 @@
 #define PIN_LED 10
 #define READ_LEN (2 * 256)
 #define GAIN_FACTOR 15
-#define SAMPLE_RATE 44100
+#define SAMPLE_RATE 8000
 
 int16_t BUFFER[READ_LEN] = {0};
 int16_t *adcBuffer = nullptr;
@@ -75,7 +75,7 @@ void toggleRecordDisplay(const bool recording)
 {
     if (recording)
     {
-        M5.Lcd.fillScreen(WHITE);
+        M5.Lcd.fillScreen(BLACK);
         M5.Lcd.setCursor(0, 20);
         delay(1000);
         M5.Lcd.print("Recording...");
@@ -83,7 +83,7 @@ void toggleRecordDisplay(const bool recording)
     }
     else
     {
-        M5.Lcd.fillScreen(WHITE);
+        M5.Lcd.fillScreen(BLACK);
         M5.Lcd.setCursor(0, 20);
         M5.Lcd.println("Recording stopped");
         M5.Lcd.println("Press A to start recording again");
@@ -97,13 +97,13 @@ void setup()
     M5.begin();
     Serial.begin(115200);
     M5.Lcd.setRotation(3);
-    M5.Lcd.fillScreen(WHITE);
+    // M5.Lcd.fillScreen(WHITE);
     delay(1000); // give me time to bring up the serial monitor
 
     pinMode(PIN_LED, OUTPUT);
     digitalWrite(PIN_LED, HIGH);
 
-    M5.Lcd.setTextColor(BLACK, WHITE);
+    // M5.Lcd.setTextColor(BLACK, WHITE);
 
 // ------------------------
 // Connect to WiFi
@@ -166,7 +166,7 @@ void loop()
         i2s_read(I2S_NUM_0, (char *)BUFFER, READ_LEN, &bytesread, 0);
         adcBuffer = (int16_t *)BUFFER;
 
-        for (int i = 0; i < bytesread / 2; i++)
+        for (int i = 0; i < bytesread; i++)
         {
             packetBuffer[bytesPacked] = (int16_t)adcBuffer[i];
             bytesPacked++;
