@@ -2,23 +2,23 @@ import socket
 import wave
 import datetime
 
-LOCAL_IP = "x.x.x.x"
-UDP_PORT = 9999
+SERVER_IP = "192.168.4.1"
+TCP_PORT = 80
 
 # WAVE_OUTPUT_FILENAME = "output.wav"
-FRAME_RATE = 44100
+FRAME_RATE = 8000
 MAX_FRAMES = 800
 
 
 def main():
-    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    sock.bind((LOCAL_IP, UDP_PORT))
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.connect((SERVER_IP, TCP_PORT))
 
-    print(f"Listening for data on UDP port {UDP_PORT}")
+    print(f"Listening for data on TCP port {TCP_PORT}")
     frames = []
     received_frames = 0
     while True:
-        data, addr = sock.recvfrom(2048)
+        data = sock.recv(1024)
         # print(f"Received data from {addr}")
         print(f"Frame {received_frames}")
         received_frames += 1

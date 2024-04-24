@@ -1,6 +1,7 @@
 #include <M5StickC.h>
 #include <WiFi.h>
-#include <WiFiUdp.h>
+#include <WiFiAP.h>
+#include <WiFiClient.h>
 #include <driver/i2s.h>
 
 #define PIN_CLK 0
@@ -8,7 +9,7 @@
 #define PIN_LED 10
 #define READ_LEN (2 * 256)
 #define GAIN_FACTOR 15
-#define SAMPLE_RATE 44100
+#define SAMPLE_RATE 8000
 
 int16_t BUFFER[READ_LEN] = {0};
 int16_t *adcBuffer = nullptr;
@@ -17,17 +18,17 @@ bool recording = false;
 
 // Set WiFi credentials
 // Includes WIFI_SSID, WIFI_PASS and LOCAL_IP
-#include "wifi_cred.h"
+// #include "wifi_cred.h"
 // #define WIFI_SSID "XXX"
 // #define WIFI_PASS "YYY"
 // #define LOCAL_IP "Z.Z.Z.Z"
-#define UDP_PORT 9999
 
-// UDP
-WiFiUDP udp;
-// IPAddress dest_ip(LOCAL_IP);
+const char *ssid = "M5Stack_Ap";
+const char *password = "66666666";
 
-const int packetSize = 2048;
+WiFiServer server(80);
+
+const int packetSize = 1024;
 uint16_t packetBuffer[packetSize];
 int bytesPacked = 0;
 
@@ -105,84 +106,125 @@ void setup()
 
     M5.Lcd.setTextColor(BLACK, WHITE);
 
-// ------------------------
-// Connect to WiFi
-#ifdef WIFI_PASS
-    WiFi.begin(WIFI_SSID, WIFI_PASS);
-#else
-    WiFi.begin(WIFI_SSID);
-#endif
-    Serial.print("Connecting to ");
-    Serial.print(WIFI_SSID);
-    M5.Lcd.print("Connecting to ");
-    M5.Lcd.println(WIFI_SSID);
-    while (WiFi.status() != WL_CONNECTED)
-    {
-        delay(100);
-        Serial.print(".");
-    }
-    // Connected to WiFi
-    Serial.print("Connected! IP address: ");
-    Serial.println(WiFi.localIP());
-    M5.Lcd.print("Connected! IP address: ");
-    M5.Lcd.println(WiFi.localIP());
-    printWiFiInfo();
+    // ------------------------
+    // Connect to WiFi
+    M5.Lcd.println("WIFI ACCESS POINT");
+    Serial.println("WIFI ACCESS POINT");
 
+    WiFi.softAP(ssid,
+                password);
+
+    M5.Lcd.println("Connected!");
+    Serial.println("Connected!");
+
+    IPAddress myIP = WiFi.softAPIP();
+
+    M5.Lcd.printf("Please connect:%s \nThen access to:", ssid);
+    Serial.printf("Please connect:%s \nThen access to:", ssid);
+    M5.Lcd.println(myIP);
+    Serial.println(myIP);
+    M5.Lcd.println("Starting server...");
+    Serial.println("Starting server...");
+
+    server.begin();
+
+    M5.Lcd.println("Success!");
+    Serial.println("Success!");
     // ------------------------
     // Init I2S
     i2sInit();
 
-    M5.Lcd.print("Press A to start recording");
+    // M5.Lcd.print("Press A to start recording");
 }
 
 void printWiFiInfo()
 {
-    Serial.println();
+    // Serial.println();
 
-    Serial.print("Sending to: ");
-    Serial.println(LOCAL_IP);
-    Serial.print("Port: ");
-    Serial.println(UDP_PORT);
-    M5.Lcd.print("Sending to: ");
-    M5.Lcd.println(LOCAL_IP);
-    M5.Lcd.print("Port: ");
-    M5.Lcd.println(UDP_PORT);
+    // Serial.print("Sending to: ");
+    // Serial.println(LOCAL_IP);
+    // Serial.print("Port: ");
+    // Serial.println(UDP_PORT);
+    // M5.Lcd.print("Sending to: ");
+    // M5.Lcd.println(LOCAL_IP);
+    // M5.Lcd.print("Port: ");
+    // M5.Lcd.println(UDP_PORT);
 }
 
 void loop()
 {
 
-    if (M5.BtnA.wasPressed())
+    // if (M5.BtnA.wasPressed())
+    // {
+    //     recording = !recording;
+    //     toggleRecordDisplay(recording);
+    // }
+
+    // M5.Lcd.setCursor(5, 5);
+    // M5.Lcd.println("Looping...");
+
+    WiFiClient client = server.available();
+    if (client)
     {
-        recording = !recording;
-        toggleRecordDisplay(recording);
+        M5.Lcd.fillScreen(WHITE);
+        M5.Lcd.setCursor(10, 10);
+        Serial.println("Got client");
+        M5.Lcd.println("Got client");
+        while (client.connected())
+        {
+            size_t bytesread = 0;
+            i2s_read(I2S_NUM_0, (char *)BUFFER, READ_LEN, &bytesread, 0);
+            adcBuffer = (int16_t *)BUFFER;
+
+            for (int i = 0; i < bytesread; i++)
+            {
+                packetBuffer[bytesPacked] = (int16_t)adcBuffer[i];
+                bytesPacked++;
+            }
+            if (bytesPacked >= packetSize)
+            {
+                bytesPacked = 0;
+                Serial.println("Sending packet");
+                // udp.beginPacket(LOCAL_IP, UDP_PORT);
+                client.write((uint8_t *)packetBuffer, packetSize);
+                // udp.print((unsigned long)packetBuffer);
+                // udp.printf("%d", packetBuffer);
+                memset(packetBuffer, 0, packetSize);
+                // udp.endPacket();
+            }
+        }
+        client.stop();
+        M5.Lcd.fillScreen(WHITE);
+        M5.Lcd.setCursor(10, 10);
+        M5.Lcd.println("Client disconnected");
+        Serial.println("Client disconnected");
     }
 
-    if (recording)
-    {
-        // ------------------------------------------------------------------------
-        // Read the data from the I2S bus
-        size_t bytesread = 0;
-        i2s_read(I2S_NUM_0, (char *)BUFFER, READ_LEN, &bytesread, 0);
-        adcBuffer = (int16_t *)BUFFER;
+    // if (recording)
+    // {
+    // // ------------------------------------------------------------------------
+    // // Read the data from the I2S bus
+    // size_t bytesread = 0;
+    // i2s_read(I2S_NUM_0, (char *)BUFFER, READ_LEN, &bytesread, 0);
+    // adcBuffer = (int16_t *)BUFFER;
 
-        for (int i = 0; i < bytesread / 2; i++)
-        {
-            packetBuffer[bytesPacked] = (int16_t)adcBuffer[i];
-            bytesPacked++;
-        }
-        if (bytesPacked >= packetSize)
-        {
-            bytesPacked = 0;
-            Serial.println("Sending packet");
-            udp.beginPacket(LOCAL_IP, UDP_PORT);
-            udp.write((uint8_t *)packetBuffer, packetSize);
-            // udp.print((unsigned long)packetBuffer);
-            // udp.printf("%d", packetBuffer);
-            memset(packetBuffer, 0, packetSize);
-            udp.endPacket();
-        }
-    }
+    // for (int i = 0; i < bytesread; i++)
+    // {
+    //     packetBuffer[bytesPacked] = (int16_t)adcBuffer[i];
+    //     bytesPacked++;
+    // }
+    // if (bytesPacked >= packetSize)
+    // {
+    //     bytesPacked = 0;
+    //     Serial.println("Sending packet");
+    //     udp.beginPacket(LOCAL_IP, UDP_PORT);
+    //     udp.write((uint8_t *)packetBuffer, packetSize);
+    //     // udp.print((unsigned long)packetBuffer);
+    //     // udp.printf("%d", packetBuffer);
+    //     memset(packetBuffer, 0, packetSize);
+    //     udp.endPacket();
+    // }
+    // }
 
     M5.update();
 }
