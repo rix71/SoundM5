@@ -9,7 +9,7 @@
 #define PIN_LED 10
 #define READ_LEN (2 * 256)
 #define GAIN_FACTOR 15
-#define SAMPLE_RATE 8000
+#define SAMPLE_RATE 12000
 
 int16_t BUFFER[READ_LEN] = {0};
 int16_t *adcBuffer = nullptr;
@@ -176,7 +176,7 @@ void loop()
             i2s_read(I2S_NUM_0, (char *)BUFFER, READ_LEN, &bytesread, 0);
             adcBuffer = (int16_t *)BUFFER;
 
-            for (int i = 0; i < bytesread; i++)
+            for (int i = 0; i < bytesread / 2; i++)
             {
                 packetBuffer[bytesPacked] = (int16_t)adcBuffer[i];
                 bytesPacked++;
@@ -186,7 +186,7 @@ void loop()
                 bytesPacked = 0;
                 Serial.println("Sending packet");
                 // udp.beginPacket(LOCAL_IP, UDP_PORT);
-                client.write((uint8_t *)packetBuffer, packetSize);
+                client.write((char *)packetBuffer, packetSize);
                 // udp.print((unsigned long)packetBuffer);
                 // udp.printf("%d", packetBuffer);
                 memset(packetBuffer, 0, packetSize);

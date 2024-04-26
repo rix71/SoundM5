@@ -2,15 +2,18 @@ import socket
 import wave
 import datetime
 
-SERVER_IP = "192.168.4.1"
+import numpy as np
+
+SERVER_IP = "x.x.x.x"
 TCP_PORT = 80
 
 # WAVE_OUTPUT_FILENAME = "output.wav"
-FRAME_RATE = 8000
-MAX_FRAMES = 800
+FRAME_RATE = 12000
+MAX_FRAMES = 100
 
 
 def main():
+    print("Starting socket")
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.connect((SERVER_IP, TCP_PORT))
 
@@ -21,6 +24,7 @@ def main():
         data = sock.recv(1024)
         # print(f"Received data from {addr}")
         print(f"Frame {received_frames}")
+        # data = data.decode("utf_16")
         received_frames += 1
         frames.append(data)
         if received_frames > MAX_FRAMES:
@@ -30,6 +34,7 @@ def main():
     output_filename = (
         f"./recordings/output_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.wav"
     )
+
     wf = wave.open(output_filename, "wb")
     wf.setnchannels(1)
     wf.setsampwidth(1)
