@@ -8,8 +8,8 @@ SERVER_IP = "x.x.x.x"
 TCP_PORT = 80
 
 # WAVE_OUTPUT_FILENAME = "output.wav"
-FRAME_RATE = 12000
-MAX_FRAMES = 100
+FRAME_RATE = 44100
+MAX_FRAMES = 500
 
 
 def main():
@@ -21,7 +21,7 @@ def main():
     frames = []
     received_frames = 0
     while True:
-        data = sock.recv(1024)
+        data = sock.recv(2048)
         # print(f"Received data from {addr}")
         print(f"Frame {received_frames}")
         # data = data.decode("utf_16")
