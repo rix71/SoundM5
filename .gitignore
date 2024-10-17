@@ -2,3 +2,4 @@ build
 .vscode
 wifi_cred.h
 SoundM5.AP.ignore
+m5_mic_example.cpp.ignore

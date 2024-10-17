@@ -1,4 +1,4 @@
-#include <M5StickC.h>
+#include <M5StickCPlus2.h>
 #include <WiFi.h>
 #include <WiFiUdp.h>
 #include <driver/i2s.h>
